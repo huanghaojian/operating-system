@@ -6,7 +6,7 @@ package com.linkworld;
  * @author <a href="mailto:hhjian.top@qq.com">hhjian</a>
  * @since 2017.11.21
  */
-public class JCB {
+public class Jcb {
     /**
      * 进程号
      */
@@ -32,10 +32,10 @@ public class JCB {
      */
     private int finishTime;
 
-    public JCB() {
+    public Jcb() {
     }
 
-    public JCB(String id, int status, int arrvieTime, int serviceTime) {
+    public Jcb(String id, int status, int arrvieTime, int serviceTime) {
         this.id = id;
         this.status = status;
         this.arrvieTime = arrvieTime;

@@ -11,14 +11,6 @@ import java.util.stream.Collectors;
  */
 public class Action {
     /**
-     * 时间片
-     */
-    private static int TIMER = 1;
-    /**
-     * 当前时间
-     */
-    private static int CURRENT_TIME = 0;
-    /**
      * 等待状态
      */
     public static final int READ_STATUS = 0;
@@ -33,24 +25,32 @@ public class Action {
     /**
      * 等待队列
      */
-    private LinkedList<JCB> readQueue = new LinkedList<>();
+    private final LinkedList<Jcb> readQueue = new LinkedList<>();
     /**
      * 就绪队列
      */
-    private LinkedList<JCB> runQueue = new LinkedList<>();
+    private final LinkedList<Jcb> runQueue = new LinkedList<>();
     /**
      * 完成队列
      */
-    private LinkedList<JCB> finishQueue = new LinkedList<>();
+    private final LinkedList<Jcb> finishQueue = new LinkedList<>();
+    /**
+     * 时间片
+     */
+    private int timeSlices = 1;
+    /**
+     * 当前时间
+     */
+    private int currentTime = 0;
 
     /**
      * 初始化
      *
-     * @param queue 进程队列
-     * @param timer 时间片
+     * @param queue      进程队列
+     * @param timeSlices 时间片
      */
-    public Action(LinkedList<JCB> queue, int timer) {
-        TIMER = timer;
+    public Action(LinkedList<Jcb> queue, int timeSlices) {
+        this.timeSlices = timeSlices;
         queue.forEach(jcb -> {
             if (jcb.getStatus() == RUN_STATUS) {
                 runQueue.add(jcb);
@@ -61,22 +61,10 @@ public class Action {
     }
 
     /**
-     * 加入就绪队列
-     */
-    public void pushRunQueue() {
-        // 新进程插入就绪队列头
-        LinkedList linkedList = readQueue.stream()
-                .filter(jcb -> CURRENT_TIME >= jcb.getArrvieTime())
-                .collect(Collectors.toCollection(LinkedList::new));
-        readQueue.removeAll(linkedList);
-        runQueue.addAll(0, linkedList);
-    }
-
-    /**
      * RR算法调度
      */
     public void dispatchRR() {
-        System.out.println("--------------------- RR算法执行流 时间片为: " + TIMER + " ----------------------");
+        System.out.println("--------------------- RR算法执行流 时间片为: " + timeSlices + " ----------------------");
         System.out.println("进程名\t\t本次开始时间\t\t本次结束时间");
         // 程序未执行完
         while (!readQueue.isEmpty()) {
@@ -87,30 +75,42 @@ public class Action {
                 // 是否有新进程进入系统
                 pushRunQueue();
                 // 取出第一个进程运行
-                JCB jcb = runQueue.pollFirst();
-                int stratTime = CURRENT_TIME;
+                Jcb jcb = runQueue.pollFirst();
+                int stratTime = currentTime;
                 int runTime = jcb.getRunTime();
                 int serviceTime = jcb.getServiceTime();
                 int execTime = serviceTime - runTime;
-                if (execTime > TIMER) {
+                if (execTime > timeSlices) {
                     // 时间片用完,重新进入就绪队列,先放新进程进入就绪队列
-                    jcb.setRunTime(runTime + TIMER);
-                    CURRENT_TIME += TIMER;
+                    jcb.setRunTime(runTime + timeSlices);
+                    currentTime += timeSlices;
                     runQueue.add(jcb);
-                    System.out.println(jcb.getId() + "\t\t\t" + stratTime + "\t\t\t\t" + CURRENT_TIME);
+                    System.out.println(jcb.getId() + "\t\t\t" + stratTime + "\t\t\t\t" + currentTime);
                 } else {
                     // 进入完成队列
-                    CURRENT_TIME += execTime;
+                    currentTime += execTime;
                     jcb.setRunTime(runTime + execTime);
                     jcb.setStatus(FINISH_STATUS);
-                    jcb.setFinishTime(CURRENT_TIME);
+                    jcb.setFinishTime(currentTime);
                     finishQueue.add(jcb);
-                    System.out.println(jcb.getId() + "\t\t\t" + stratTime + "\t\t\t\t" + CURRENT_TIME);
+                    System.out.println(jcb.getId() + "\t\t\t" + stratTime + "\t\t\t\t" + currentTime);
                 }
             }
         }
 
         finishPrint();
+    }
+
+    /**
+     * 加入就绪队列
+     */
+    private void pushRunQueue() {
+        // 新进程插入就绪队列头
+        LinkedList linkedList = readQueue.stream()
+                .filter(jcb -> currentTime >= jcb.getArrvieTime())
+                .collect(Collectors.toCollection(LinkedList::new));
+        readQueue.removeAll(linkedList);
+        runQueue.addAll(0, linkedList);
     }
 
     /**
