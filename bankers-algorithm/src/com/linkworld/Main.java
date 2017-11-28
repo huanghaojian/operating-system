@@ -42,6 +42,9 @@ public class Main {
      * 请求各资源的个数
      */
     private static int[] requestResource;
+    /**
+     * 各进程是否已完成
+     */
     private static boolean[] isFinishProcesses;
     /**
      * 可用资源
@@ -107,7 +110,7 @@ public class Main {
             }
         }
         System.out.println("试分配完成...");
-        if (testSafty()) {
+        if (testSafety()) {
             //使用安全性算法检查，若满足，则正式分配
             System.out.println("安全性算法检查通过,安全序列:" + finishProcesses);
             allocateSource();
@@ -121,7 +124,7 @@ public class Main {
     /**
      * 安全性检验
      */
-    private static boolean testSafty() {
+    private static boolean testSafety() {
         availableWorks = available;
         isFinishProcesses = new boolean[processNum];
 
@@ -145,7 +148,7 @@ public class Main {
     /**
      * 找出符合 FINISH==false; NEED<=Work; 的进程
      *
-     * @return
+     * @return 符合要求的进程序号
      */
     private static int findProcess() {
         // 判断请求进程请求资源是否结束
